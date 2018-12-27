@@ -5,9 +5,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
-
-
-#define SOCKET_NAME "/tmp/DemoSocket/"
+#define SOCKET_NAME "/tmp/DemoSocket"
 #define BUFFER_SIZE 128
 
 int
@@ -42,14 +40,19 @@ main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	printf("master socket created\n");
+	printf("master socket created %d\n", connection_socket);
 
 	memset(&name, 0, sizeof(struct sockaddr_un));
 
 	name.sun_family = AF_UNIX;
 	strncpy(name.sun_path, SOCKET_NAME, sizeof(name.sun_path) - 1);
 
-	ret = bind(connection_socket, (const struct sockaddr *)&name, sizeof(struct sockaddr_un));
+	if (setsockopt(connection_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&name, sizeof(struct sockaddr_un)) < 0)
+	{
+		perror("setsockopt");
+		exit(EXIT_FAILURE);
+	}
+	ret = bind(connection_socket, (const struct sockaddr *) &name, sizeof(struct sockaddr_un));
 
 	if (ret == -1)
 	{
